@@ -8,8 +8,7 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [cljsjs/react "0.12.2-5"]
-                 [reagent "0.5.0-alpha3"]
-                 [reagent-forms "0.4.3"]
+                 [reagent "0.4.3"]
                  [reagent-utils "0.1.3"]
                  [secretary "1.2.1"]
                  [org.clojure/clojurescript "0.0-2913" :scope "provided"]
@@ -19,7 +18,7 @@
                  [compojure "1.3.2"]
                  [selmer "0.8.0"]
                  [environ "1.0.0"]
-                 [kioo "0.4.1-SNAPSHOT"]]
+                 [kioo "0.4.0"]]
 
   :plugins [
             [lein-cljsbuild "1.0.4"]

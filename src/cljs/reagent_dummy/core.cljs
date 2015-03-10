@@ -1,49 +1,77 @@
 (ns reagent-dummy.core
     (:require [reagent.core :as reagent :refer [atom]]
-              [reagent.session :as session]
-              [secretary.core :as secretary :include-macros true]
-              [goog.events :as events]
-              [goog.history.EventType :as EventType]
-              [cljsjs.react :as react])
-    (:import goog.History))
+              [cljsjs.react :as react]
+              [kioo.reagent :as kioo :refer [content do-> listen]])
+    (:require-macros [kioo.reagent :refer [defsnippet]]))
 
 ;; -------------------------
 ;; Views
 
-(defn home-page []
-  [:div [:h2 "Welcome to reagent-dummy"]
-   [:div [:a {:href "#/about"} "go to about page"]]])
+(def state (atom {:stories {:story1 {:key :story1, :val "story1"}
+                            :story2 {:key :story2, :val "story2"}}
+                  :releases {:release1 {:key :release1, :val "release1"}
+                             :release2 {:key :release2, :val "release2"}}
+                  :selected []}))
 
-(defn about-page []
-  [:div [:h2 "About reagent-dummy"]
-   [:div [:a {:href "#/"} "go to the home page"]]])
+(defn elem-view [elem path]
+  (let [local-state (atom {:initialized true})]
+    (fn [elem path]
+      [:li {:onClick (fn [_]
+                       (swap! state update-in [:selected] conj :story1)
+                       (reset! local-state {:initialized false}))}
+       (get-in @state (conj path :val)) " was initialized: " (str (get @local-state :initialized))])))
 
-(defn current-page []
-  [:div [(session/get :current-page)]])
+(defn filter-stories [stories filtered]
+  (if (seq filtered)
+    (filterv #(some #{%} filtered) stories)
+    stories))
 
-;; -------------------------
-;; Routes
-(secretary/set-config! :prefix "#")
+(defn app []
+  [:div "reagent"
+   [:ul
+    (for [elem (filter-stories (keys (:stories @state)) (:selected @state))]
+      ^{:key elem} [elem-view elem [:stories elem]])]
+   [:ul
+    (for [elem (keys (:releases @state))]
+      ^{:key elem} [elem-view elem [:releases elem]])]])
 
-(secretary/defroute "/" []
-  (session/put! :current-page #'home-page))
+(def kioo-state (atom {:stories {:story1 {:key :story1, :val "story1"}
+                            :story2 {:key :story2, :val "story2"}}
+                  :releases {:release1 {:key :release1, :val "release1"}
+                             :release2 {:key :release2, :val "release2"}}
+                  :selected []}))
 
-(secretary/defroute "/about" []
-  (session/put! :current-page #'about-page))
+(defsnippet kioo-elem-view* "templates/list.html" [(attr= :template "elem")]
+  [local-state elem path]
+  {[(attr= :field "val")] (do->
+                           (listen :on-click (fn [e]
+                                               (swap! kioo-state update-in [:selected] conj :story1)
+                                               (reset! local-state {:initialized false})))
+                           (content (get-in @kioo-state (conj path :val)) " was initialized: " (str (:initialized @local-state))))})
 
-;; -------------------------
-;; History
-;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+(defn kioo-elem-view [elem path]
+  [kioo-elem-view* (atom {:initialized true}) elem path])
 
+(defsnippet kioo-app "templates/list.html" [(attr= :template "lists")]
+  []
+  {[(attr= :field "story-list")] (content
+                                  (for [elem (filter-stories (keys (:stories @kioo-state)) (:selected @kioo-state))]
+                                    [kioo-elem-view elem [:stories elem]])
+                                  ;; (map #(kioo-elem-view % [:stories %])
+                                  ;;      (filter-stories (keys (:stories @kioo-state)) (:selected @kioo-state)))
+                                  )
+   [(attr= :field "release-list")] (content
+                                    (for [elem (keys (:releases @kioo-state))]
+                                      [kioo-elem-view elem [:releases elem]])
+                                    ;; (map #(kioo-elem-view % [:releases %])
+                                    ;;       (keys (:releases @kioo-state)))
+                                    )})
+
+(defn kioo-init []
+  [:div "kioo"
+   [kioo-app]])
 ;; -------------------------
 ;; Initialize app
 (defn init! []
-  (hook-browser-navigation!)
-  (reagent/render-component [current-page] (.getElementById js/document "app")))
+  (reagent/render-component [app] (.getElementById js/document "app"))
+  (reagent/render-component [kioo-init] (.getElementById js/document "kioo-app")))
