@@ -21,7 +21,7 @@
                  [kioo "0.4.0"]]
 
   :plugins [
-            [lein-cljsbuild "1.0.4"]
+            [lein-cljsbuild "1.0.3"]
             [lein-environ "1.0.0"]
             [lein-ring "0.9.1"]
             [lein-asset-minifier "0.2.2"]]
@@ -83,9 +83,9 @@
                                                           :pretty-print true
                                                           :preamble ["react/react.js"]}}}
                                :test-commands {"unit" ["phantomjs" :runner
-                                                       "test/vendor/es5-shim.js"
-                                                       "test/vendor/es5-sham.js"
-                                                       "test/vendor/console-polyfill.js"
+                                                       ;; "test/vendor/es5-shim.js"
+                                                       ;; "test/vendor/es5-sham.js"
+                                                       ;; "test/vendor/console-polyfill.js"
                                                        "target/test.js"]}}}
 
              :uberjar {:hooks [leiningen.cljsbuild minify-assets.plugin/hooks]
@@ -102,5 +102,4 @@
              :production {:ring {:open-browser? false
                                  :stacktraces?  false
                                  :auto-reload?  false}
-                          :cljsbuild {:builds {:app {:compiler {:main "reagent-dummy.prod"}}}}
-                          }})
+                          :cljsbuild {:builds {:app {:compiler {:main "reagent-dummy.prod"}}}}}})
